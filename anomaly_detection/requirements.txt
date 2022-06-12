@@ -1,0 +1,8 @@
+pandas
+plotly
+matplotlib
+scikit-learn
+fastapi
+uvicorn
+jupyter
+prometheus_client

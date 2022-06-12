@@ -1,0 +1,53 @@
+version: "3"
+volumes:
+  prometheus_data:
+  grafana_data:
+services:
+  prometheus:
+    image: prom/prometheus:v2.20.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      [
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--storage.tsdb.path=/prometheus",
+        "--storage.tsdb.retention.time=48h",
+      ]
+    restart: unless-stopped
+    expose:
+      - "9090"
+  grafana:
+    image: grafana/grafana:7.1.1
+    container_name: grafana
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-cliu}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    expose:
+      - "3000"
+  caddy:
+    image: stefanprodan/caddy
+    container_name: caddy
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-cliu}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - ./caddy:/etc/caddy
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9090:9090"
+  web-service:
+    image: "cliu/lp-service"
+    container_name: "anomaly-detection-service"
+    restart: unless-stopped
+    expose:
+      - "8889"
+    ports:
+      - "8889:8889"
